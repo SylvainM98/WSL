@@ -700,7 +700,11 @@ void LoadKvmModule()
         module = "kvm_amd";
     }
 
-    THROW_ERRNO_IF(ENOTSUP, module == nullptr);
+    if (module == nullptr)
+    {
+        LOG_ERROR("Unsupported processor vendor for KVM: '{}'", vendor.data());
+        THROW_ERRNO(ENOTSUP);
+    }
 
     const char* argv[] = {"/sbin/modprobe", module, nullptr};
     THROW_ERRNO_IF(EIO, UtilCreateProcessAndWait("/sbin/modprobe", argv) < 0);

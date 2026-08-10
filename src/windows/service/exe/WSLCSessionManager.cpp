@@ -39,6 +39,7 @@ Abstract:
 #include "filesystem.hpp"
 #include "APICompat.h"
 #include "Localization.h"
+#include "wslpolicies.h"
 
 extern wsl::windows::service::PluginManager g_pluginManager;
 
@@ -207,6 +208,11 @@ void WSLCSessionManagerImpl::CreateSession(
         THROW_HR_IF_MSG(E_INVALIDARG, WI_IsAnyFlagSet(Flags, ~WSLCSessionFlagsValid), "Invalid session flags: 0x%x", Flags);
         THROW_HR_IF_MSG(
             E_INVALIDARG, WI_IsAnyFlagSet(Settings->FeatureFlags, ~WSLCFeatureFlagsValid), "Invalid feature flags: 0x%x", Settings->FeatureFlags);
+        if (WI_IsFlagSet(Settings->FeatureFlags, WslcFeatureFlagsNestedVirtualization))
+        {
+            wsl::windows::policies::EnsureWslContainerNestedVirtualizationAllowed();
+        }
+
         THROW_HR_IF_MSG(
             E_INVALIDARG,
             WI_IsAnyFlagSet(Settings->StorageFlags, ~WSLCSessionStorageFlagsValid),

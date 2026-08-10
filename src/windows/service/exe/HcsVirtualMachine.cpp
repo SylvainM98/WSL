@@ -27,6 +27,7 @@ Abstract:
 #include "ExecutionContext.h"
 #include "Localization.h"
 #include "string.hpp"
+#include "wslpolicies.h"
 
 using namespace wsl::windows::common;
 using helpers::WindowsBuildNumbers;
@@ -151,6 +152,8 @@ HcsVirtualMachine::HcsVirtualMachine(_In_ const WSLCSessionSettings* Settings)
 
     if (FeatureEnabled(WslcFeatureFlagsNestedVirtualization))
     {
+        wsl::windows::policies::EnsureWslContainerNestedVirtualizationAllowed();
+
         THROW_HR_WITH_USER_ERROR_IF(
             HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED),
             wsl::shared::Localization::MessageNestedVirtualizationNotSupported(),
