@@ -4135,6 +4135,44 @@ class WSLCTests
         }
     }
 
+    WSLC_TEST_METHOD(ContainerNestedVirtualization)
+    {
+        // Nested virtualization must be explicitly enabled for the session.
+        {
+            WSLCContainerLauncher launcher(
+                "debian:latest", "test-container-no-nested-virtualization", {"/bin/sh", "-c", "test ! -e /dev/kvm"});
+            auto container = launcher.Launch(*m_defaultSession);
+            ValidateContainerOutput(container, {}, 0);
+        }
+
+        auto restore = ResetTestSession();
+
+        auto settings = GetDefaultSessionSettings(L"container-nested-virtualization-test", true);
+        WI_SetFlag(settings.FeatureFlags, WslcFeatureFlagsNestedVirtualization);
+
+        if (!wsl::windows::common::hcs::IsNestedVirtualizationSupported())
+        {
+            const auto sessionManager = OpenSessionManager();
+            wil::com_ptr<IWSLCSession> session;
+            VERIFY_SUCCEEDED(sessionManager->CreateSession(&settings, WSLCSessionFlagsNone, nullptr, &session));
+            wsl::windows::common::security::ConfigureForCOMImpersonation(session.get());
+
+            WSLCSessionState state{};
+            VERIFY_ARE_EQUAL(HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED), session->GetState(&state));
+            ValidateCOMErrorMessage(wsl::shared::Localization::MessageNestedVirtualizationNotSupported());
+            return;
+        }
+
+        auto session = CreateSession(settings);
+        constexpr auto kvmCheck =
+            "import fcntl, os; "
+            "fd = os.open('/dev/kvm', os.O_RDWR); "
+            "assert fcntl.ioctl(fd, 0xAE00) == 12";
+        WSLCContainerLauncher launcher("python:3.12-alpine", "test-container-nested-virtualization", {"python3", "-c", kvmCheck});
+        auto container = launcher.Launch(*session);
+        ValidateContainerOutput(container, {}, 0);
+    }
+
     WSLC_TEST_METHOD(Modules)
     {
         // Sanity check.

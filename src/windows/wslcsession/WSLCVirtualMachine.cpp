@@ -997,7 +997,7 @@ void WSLCVirtualMachine::MountModules(shared::SocketChannel& Channel, LPCSTR Sou
         TraceLoggingValue(LoadKvm, "LoadKvm"),
         TraceLoggingValue(response.Result, "Result"));
 
-    THROW_HR_IF(E_FAIL, response.Result != 0);
+    THROW_IF_FAILED(static_cast<HRESULT>(response.Result));
 }
 
 void WSLCVirtualMachine::MountVirtioFsChild(shared::SocketChannel& Channel, LPCSTR Source, LPCSTR ChildName, LPCSTR Target, LPCSTR Options, ULONG Flags)
