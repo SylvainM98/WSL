@@ -38,6 +38,7 @@ Abstract:
 #include "wslutil.h"
 #include "filesystem.hpp"
 #include "APICompat.h"
+#include "hcs.hpp"
 #include "Localization.h"
 #include "wslpolicies.h"
 
@@ -211,6 +212,10 @@ void WSLCSessionManagerImpl::CreateSession(
         if (WI_IsFlagSet(Settings->FeatureFlags, WslcFeatureFlagsNestedVirtualization))
         {
             wsl::windows::policies::EnsureWslContainerNestedVirtualizationAllowed();
+            THROW_HR_WITH_USER_ERROR_IF(
+                HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED),
+                wsl::shared::Localization::MessageNestedVirtualizationNotSupported(),
+                !wsl::windows::common::hcs::IsNestedVirtualizationSupported());
         }
 
         THROW_HR_IF_MSG(
