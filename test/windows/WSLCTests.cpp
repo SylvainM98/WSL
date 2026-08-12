@@ -4157,8 +4157,8 @@ class WSLCTests
             VERIFY_SUCCEEDED(sessionManager->CreateSession(&settings, WSLCSessionFlagsNone, nullptr, &session));
             wsl::windows::common::security::ConfigureForCOMImpersonation(session.get());
 
-            WSLCSessionState state{};
-            VERIFY_ARE_EQUAL(HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED), session->GetState(&state));
+            wil::unique_cotaskmem_array_ptr<WSLCImageInformation> images;
+            VERIFY_ARE_EQUAL(HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED), session->ListImages(nullptr, &images, images.size_address<ULONG>()));
             ValidateCOMErrorMessage(wsl::shared::Localization::MessageNestedVirtualizationNotSupported());
             return;
         }
